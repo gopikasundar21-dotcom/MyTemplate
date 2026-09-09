@@ -6,7 +6,7 @@
 # Backend testing + coverage (pytest/pytest-cov are also referenced by the app,
 # but pinned here so the pipeline is reproducible).
 pytest==8.2.0
-pytest-cov==4.0.0
+pytest-cov==7.1.0
 
 # UI testing
 pytest-playwright==0.9.0
