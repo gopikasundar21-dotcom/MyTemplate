@@ -1,0 +1,86 @@
+# Central tooling config for MyTemplate.
+# Keeps pytest, coverage, Ruff (lint), and Bandit (security) settings in one place
+# so the Makefile and CI run identical checks.
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+# -p no:cacheprovider keeps CI runs clean; markers documented below.
+addopts = "-ra --strict-markers"
+markers = [
+    "ui: end-to-end UI tests driven by Playwright (require a live server)",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["appname"]
+omit = [
+    "*/static/*",
+    "*/templates/*",
+    "appname/settings.py",
+    "manage.py",
+]
+
+[tool.coverage.report]
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+]
+
+[tool.coverage.html]
+directory = "reports/coverage_html"
+
+[tool.coverage.xml]
+output = "reports/coverage.xml"
+
+# ---------------------------------------------------------------------------
+# Ruff: static analysis / linting
+# ---------------------------------------------------------------------------
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+# Never lint vendored, generated, or asset code.
+extend-exclude = [
+    "venv",
+    "env",
+    "migrations",
+    "appname/static",
+    "instance",
+    "tmp",
+]
+
+[tool.ruff.lint]
+# A focused, high-signal rule set. We favour rules that catch real bugs and
+# keep imports tidy over broad stylistic rules, since this is an inherited
+# codebase and we don't want to drown the pipeline in cosmetic noise.
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes (unused imports, undefined names, etc.)
+    "W",   # pycodestyle warnings
+    "I",   # import sorting
+    "UP",  # pyupgrade (modernise syntax)
+    "B",   # flake8-bugbear (likely bugs)
+]
+# Long lines and a few bugbear patterns in inherited code are not worth failing on.
+ignore = [
+    "E501",   # line too long (handled by line-length where practical)
+    "B008",   # function call in default arg (common Flask pattern)
+    "B017",   # assertRaises(Exception) in existing tests
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests may re-import fixtures and use assert-heavy patterns.
+"tests/*" = ["F811", "F401"]
+"tests_ui/*" = ["F811", "F401"]
+
+# ---------------------------------------------------------------------------
+# Bandit: security scanning
+# ---------------------------------------------------------------------------
+[tool.bandit]
+# Scan application code only; tests deliberately use fixtures/patterns Bandit
+# would otherwise flag (e.g. hardcoded test passwords, asserts).
+exclude_dirs = ["venv", "env", "tests", "tests_ui", "migrations", "instance", "tmp"]

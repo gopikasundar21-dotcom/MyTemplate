@@ -1,7 +1,8 @@
 import os
 import tempfile
 
-class Config(object):
+
+class Config:
     # run flask generate_secret_key
     SECRET_KEY = os.getenv('SECRET_KEY', 'SET-THIS-ENV-VAR-IN-PROD!-esdas#!3de*o0alas')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
@@ -80,8 +81,12 @@ class TestConfig(Config):
     DEBUG = True
     DEBUG_TB_INTERCEPT_REDIRECTS = False
 
-    db_file = tempfile.NamedTemporaryFile()
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + db_file.name
+    # Use a temp file *path* (not an open handle). On Windows, NamedTemporaryFile
+    # keeps an exclusive lock on the file, which prevents SQLite from opening it
+    # ("unable to open database file"). Generating just the path avoids that.
+    _db_fd, _db_path = tempfile.mkstemp(suffix='.db')
+    os.close(_db_fd)
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + _db_path
     SQLALCHEMY_ECHO = False  # Optionally enable if you want to see database actions
     ASSETS_DEBUG = True
 

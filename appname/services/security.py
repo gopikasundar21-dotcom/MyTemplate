@@ -1,12 +1,19 @@
 import hashlib
+
 from itsdangerous import URLSafeTimedSerializer
+
 
 class Token:
     def init_app(self, app):
         self.app = app
         encoded_secret = app.config["SECRET_KEY"].encode()
         self.ts = URLSafeTimedSerializer(encoded_secret)
-        self.unique_salt = hashlib.md5(encoded_secret).hexdigest()[:5]
+        # Not a security hash: this only derives a short, stable salt fragment
+        # to namespace itsdangerous tokens. usedforsecurity=False documents that
+        # intent and satisfies static analysis (Bandit B324).
+        self.unique_salt = hashlib.md5(
+            encoded_secret, usedforsecurity=False
+        ).hexdigest()[:5]
 
     def generate(self, key, salt='default-salt'):
         return self.ts.dumps(key, salt + self.unique_salt)

@@ -1,7 +1,8 @@
 from flask_login import current_user
-
 from flask_socketio import join_room, leave_room, send
+
 from appname.extensions import socketio
+
 
 @socketio.on('connect')
 def connect():

@@ -1,16 +1,15 @@
 {
-    "python.pythonPath": "${workspaceFolder}/env/bin/python",
-    "python.testing.pytestArgs": [],
+    // Pin the project's virtualenv so the editor stops asking which interpreter to use.
+    // Windows venv layout: venv\Scripts\python.exe
+    "python.defaultInterpreterPath": "${workspaceFolder}\\venv\\Scripts\\python.exe",
+
+    // Testing: use pytest, discovered from the tests/ directory.
     "python.testing.pytestEnabled": true,
-    "python.linting.pylintEnabled": false,
-    "python.linting.flake8Enabled": true,
-    "python.formatting.autopep8Args": [
-        "--ignore=E302,E123,E133,E226,E241,E242",
-        "--aggressive"
-    ],
-    "python.linting.enabled": true,
-    // Jinja formatting is not great
-    "html.format.enable": false,
     "python.testing.unittestEnabled": false,
-    "python.testing.nosetestsEnabled": false
+    "python.testing.pytestArgs": [
+        "tests"
+    ],
+
+    // Jinja templates don't format cleanly with the HTML formatter.
+    "html.format.enable": false
 }

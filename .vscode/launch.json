@@ -1,27 +1,25 @@
 {
     "version": "0.2.0",
     "configurations": [
-    
         {
-            "name": "Flask (For Debugger)",
-            "type": "python",
+            "name": "Flask (Debug)",
+            "type": "debugpy",
             "request": "launch",
-            "stopOnEntry": false,
-            "python": "${workspaceFolder}/env/bin/python",
-            "module": "flask.cli",
-            "cwd": "${workspaceRoot}",
+            "module": "flask",
+            "python": "${workspaceFolder}\\venv\\Scripts\\python.exe",
+            "cwd": "${workspaceFolder}",
             "env": {
+                "APPNAME_ENV": "dev",
                 "FLASK_APP": "manage",
-                "FLASK_ENV": "development",
-                "FLASK_DEBUG": "0",
-                "LC_ALL": "en_US.utf-8",
-                "LANG": "en_US.utf-8"
+                "FLASK_DEBUG": "1"
             },
             "args": [
                 "run",
-                "--no-debugger"
+                "--no-debugger",
+                "--no-reload"
             ],
-            "envFile": "${workspaceRoot}/.env",
-        },
+            "jinja": true,
+            "autoStartBrowser": false
+        }
     ]
 }

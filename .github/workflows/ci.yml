@@ -1,0 +1,88 @@
+name: MyTemplate CI
+
+# Repeatable quality pipeline: lint, security scan, backend tests + coverage,
+# and Playwright UI tests. Every report is uploaded as a downloadable artifact.
+on:
+  push:
+    branches: ["*"]
+  pull_request:
+    branches: ["*"]
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    env:
+      APPNAME_ENV: test
+      # ProdConfig reads this at import time; give CI a harmless default.
+      DATABASE_URL: "sqlite:///:memory:"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt -r requirements-dev.txt
+
+      - name: Install Playwright browser
+        run: python -m playwright install --with-deps chromium
+
+      - name: Create reports directory
+        run: mkdir -p reports
+
+      # --- Static analysis (Ruff) --------------------------------------------
+      # Always write the machine-readable report; the second call gates the job.
+      - name: Lint (Ruff)
+        run: |
+          python -m ruff check . --output-format=json --output-file=reports/ruff.json || true
+          python -m ruff check .
+
+      # --- Security scan (Bandit) --------------------------------------------
+      - name: Security scan (Bandit)
+        run: |
+          python -m bandit -r appname -c pyproject.toml -f json -o reports/bandit.json || true
+          python -m bandit -r appname -c pyproject.toml
+
+      # --- Backend tests + coverage ------------------------------------------
+      - name: Backend tests + coverage (pytest)
+        run: |
+          python -m pytest tests/ \
+            --deselect tests/test_config.py::TestConfig::test_prod_config \
+            --junitxml=reports/junit-backend.xml \
+            --cov=appname \
+            --cov-report=term-missing \
+            --cov-report=xml:reports/coverage.xml \
+            --cov-report=html:reports/coverage_html
+
+      # --- UI tests (Playwright) ---------------------------------------------
+      - name: UI tests (Playwright)
+        run: |
+          python -m pytest tests_ui/ -o testpaths=tests_ui \
+            --junitxml=reports/junit-ui.xml
+
+      # --- Publish artifacts -------------------------------------------------
+      # `if: always()` uploads reports even when an earlier step failed, so a
+      # reviewer can always inspect what happened.
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: quality-reports
+          path: reports/
+          if-no-files-found: warn
+
+      # Surfaces the JUnit results directly in the GitHub run summary / checks.
+      - name: Publish test results summary
+        if: always()
+        uses: dorny/test-reporter@v1
+        with:
+          name: Test results
+          path: "reports/junit-*.xml"
+          reporter: java-junit
+          fail-on-error: false

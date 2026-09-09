@@ -1,0 +1,19 @@
+# Development & quality-pipeline tooling for MyTemplate.
+# Install with: pip install -r requirements.txt -r requirements-dev.txt
+# Runtime dependencies live in requirements.txt; this file adds the tools the
+# Makefile / CI use for testing, linting, security scanning, and reporting.
+
+# Backend testing + coverage (pytest/pytest-cov are also referenced by the app,
+# but pinned here so the pipeline is reproducible).
+pytest==8.2.0
+pytest-cov==4.0.0
+
+# UI testing
+pytest-playwright==0.9.0
+playwright==1.62.0
+
+# Static analysis / linting
+ruff==0.16.5
+
+# Security scanning
+bandit==1.9.4
